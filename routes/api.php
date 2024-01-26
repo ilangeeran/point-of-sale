@@ -29,4 +29,7 @@ Route::group(["middleware" => 'auth:api'], function () {
     Route::get('categories', [EcommerceController::class, 'categories']);
     
     Route::get('products', [EcommerceController::class, 'products']);
+
+    Route::get('wishlists', [EcommerceController::class, 'wishlists']);
+    Route::post('wishlists', [EcommerceController::class, 'toggleWishlists']);
 });

@@ -58,4 +58,7 @@ return [
     'import_products' => 'Import Products',
     'file_to_import' => 'File To Import',
     'file_imported_successfully' => 'File imported successfully',
+    'product' => 'Product',
+    'added_wishlist_success' => 'Wishlist added successfully',
+    'removed_wishlist_success' => 'Wishlist removed successfully',
 ];
