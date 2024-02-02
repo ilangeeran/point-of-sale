@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PasswordResetMail;
 use App\User;
 use App\Media;
 use App\Utils\ModuleUtil;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Notifications\ResetPassword;
+use DB;
+use Mail;
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
@@ -281,5 +287,181 @@ class UserController extends Controller
         }
 
         return $this->respond($output);
+    }
+
+    public function forgotPasswordApi(Request $request)
+    {
+        $request->validate([
+            'email' => "required|email|exists:users,email",
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user) {            
+            $num_token = random_int(100000, 999999);
+            $token = md5($num_token);
+            $expire = (int) config('auth.passwords.users.expire');
+
+            DB::table(config('auth.passwords.users.table'))
+                ->where('email', $user->email)
+                ->where('created_at', '<', Carbon::now()->subMinute($expire))
+                ->delete();
+
+            DB::table(config('auth.passwords.users.table'))->insert([
+                'email' => $user->email,
+                'token' => $token,
+                'created_at' => Carbon::now(),
+            ]);
+
+            \Log::info("Email Verify Token: " . $num_token);
+            try {
+                Mail::send(new PasswordResetMail($user, $num_token));
+            } catch (\Exception $ex) {
+                \Log::error('Conform Mail: ' . $ex->getMessage());
+            }
+
+            return response(['message' => trans(Password::RESET_LINK_SENT), 'status' => true], 200);
+        }
+
+        return response(['message' => trans(Password::INVALID_USER), 'status' => false], 200);
+    }
+
+    public function verifyResetLinkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|digits:6',
+        ]);
+
+        $email = $request->get('email');
+        $code = $request->get('code');
+
+        $user = User::where('email', $email)->first();
+
+        if ($user) {
+            $expire = (int) config('auth.passwords.users.expire');
+
+            $password_reset = DB::table(config('auth.passwords.users.table'))
+                ->where('email', $email)
+                ->where('token', md5($code))
+                ->where('created_at', '>=', Carbon::now()->subMinute($expire))
+                ->first();
+
+            if ($password_reset) {
+                if ($user->is_email_verified != 1) {
+                    $user->uhash = generateRandomNumber(6);
+                    $user->is_email_verified = 1;
+                    $user->email_verified_at = Carbon::now()->subMinute($expire);
+                }
+
+                $user->security_code_at = Carbon::now();
+                $user->setRememberToken(Str::random(60));
+                $user->save();
+
+                return $this->respondWithSuccess([
+                    'email' => $user->email,
+                    'token' => $user->getRememberToken(),
+                ]);
+            }
+        }
+
+        return $this->respondWithNotFound();
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|confirmed|min:6',
+        ]);
+
+        $email = $request->get('email');
+        $token = $request->get('token');
+        $password = $request->get('password');
+        $expire = (int) config('auth.passwords.users.expire');
+
+        $user = User::where('email', $email)
+            ->where('remember_token', $token)
+            ->where('security_code_at', '>=', Carbon::now()->subMinute($expire))
+            ->first();
+
+        if ($user) {
+            $user->password = $password;
+            $user->security_code_at = Carbon::now()->subMinute($expire);
+            $user->setRememberToken(Str::random(60));
+            $user->save();
+
+            // Delete password reset token form password_reset table
+            DB::table(config('auth.passwords.users.table'))
+                ->where('email', $user->email)
+                ->delete();
+
+            event(new PasswordReset($user));
+
+            try {
+                Mail::send(new InfoPasswordChangedMail($user));
+            } catch (\Extension $ex) {
+                Log::channel('email')->error('Info Password Changed: ' . $ex->getMessage());
+            }
+
+            return $this->respondWithSuccess();
+        }
+
+        return $this->respondWithNotFound();
+    }
+
+    public function emailVerification(EmailVerificationRequest $request)
+    {
+        $email = $request->get('email');
+        $code = md5($request->get('code'));
+        $expire = (int) config('auth.passwords.users.expire');
+
+        $user = User::where('email', $email)
+            ->where('uhash', $code)
+            ->where('is_email_verified', 0)
+            ->where('security_code_at', '>=', Carbon::now()->subMinute($expire))
+            ->first();
+
+        if ($user) {
+            $new_code = generateRandomNumber(6);
+
+            $user->uhash = md5($new_code);
+            $user->is_email_verified = 1;
+            $user->email_verified_at = Carbon::now()->subMinute($expire);
+            $user->save();
+
+            // Send welcome mail to register user, after register
+            try {
+                Mail::send(new WelcomeMail($user->id));
+            } catch (\Exception $ex) {
+                Log::channel('email')->error('Welcome Mail: ' . $ex->getMessage());
+            }
+
+            return $this->respondWithSuccess();
+        }
+
+        return $this->respondWithNotFound([], "Confirmation code doesn't match.");
+    }
+
+    public function resendVerificationCode(ResedVerificationCodeRequest $request)
+    {
+        $email = $request->get('email');
+
+        $user = User::where('email', $email)
+            ->first();
+
+        if ($user) {
+            // Send email verification main to register user, after register
+            try {
+                Mail::send(new EmailConformMail($user->id));
+            } catch (\Exception $ex) {
+                Log::channel('email')->error('Conform Mail: ' . $ex->getMessage());
+            }
+
+            return $this->respondWithSuccess();
+        }
+
+        return $this->respondWithNotFound([], "Email doesn't match.");
     }
 }

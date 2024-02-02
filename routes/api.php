@@ -17,6 +17,9 @@ use App\Http\Controllers\EcommerceController;
 
 Route::post('user/login', [UserController::class, 'login']);
 Route::post('user/register', [UserController::class, 'store']);
+Route::post('user/forgot-password', [UserController::class, 'forgotPasswordApi']);
+// Route::get('user/change-password', [UserController::class, 'changePassword'])->name('password.reset');
+// Route::post('user/reset-password', [UserController::class, 'resetPassword']);
 
 Route::group(["middleware" => 'auth:api'], function () {
     Route::get('user', [UserController::class, 'getProfileApi']);

@@ -15,6 +15,17 @@
  */
 
 /*!
+ * Sizzle CSS Selector Engine v2.3.6
+ * https://sizzlejs.com/
+ *
+ * Copyright JS Foundation and other contributors
+ * Released under the MIT license
+ * https://js.foundation/
+ *
+ * Date: 2021-02-16
+ */
+
+/*!
  * The buffer module from node.js, for the browser.
  *
  * @author   Feross Aboukhadijeh <http://feross.org>
@@ -22,20 +33,23 @@
  */
 
 /*!
- * Vue.js v2.7.16
- * (c) 2014-2023 Evan You
+ * Vue.js v2.7.13
+ * (c) 2014-2022 Evan You
  * Released under the MIT License.
  */
 
 /*!
- * jQuery JavaScript Library v3.7.1
+ * jQuery JavaScript Library v3.6.1
  * https://jquery.com/
+ *
+ * Includes Sizzle.js
+ * https://sizzlejs.com/
  *
  * Copyright OpenJS Foundation and other contributors
  * Released under the MIT license
  * https://jquery.org/license
  *
- * Date: 2023-08-28T13:37Z
+ * Date: 2022-08-26T17:52Z
  */
 
 /*!
@@ -75,4 +89,4 @@
 
 //! moment.js locale configuration
 
-//! version : 0.5.44
+//! version : 0.5.38
