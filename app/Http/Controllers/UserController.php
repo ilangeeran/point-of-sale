@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\PasswordResetMail;
-use App\User;
-use App\Media;
-use App\Utils\ModuleUtil;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Auth\Notifications\ResetPassword;
 use DB;
 use Mail;
+use App\User;
+use App\Media;
 use Carbon\Carbon;
+use App\Utils\ModuleUtil;
+use Illuminate\Http\Request;
+use App\Mail\PasswordResetMail;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Mail\InfoPasswordChangedMail;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Notifications\ResetPassword;
 
 class UserController extends Controller
 {
@@ -320,13 +322,13 @@ class UserController extends Controller
                 \Log::error('Conform Mail: ' . $ex->getMessage());
             }
 
-            return response(['message' => trans(Password::RESET_LINK_SENT), 'status' => true], 200);
+            return $this->respondSuccess(trans(Password::RESET_LINK_SENT));
         }
 
-        return response(['message' => trans(Password::INVALID_USER), 'status' => false], 200);
+        return $this->respondWithError(trans(Password::INVALID_USER));
     }
 
-    public function verifyResetLinkEmail(Request $request)
+    public function verifyPasswordApi(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
@@ -348,27 +350,26 @@ class UserController extends Controller
                 ->first();
 
             if ($password_reset) {
-                if ($user->is_email_verified != 1) {
-                    $user->uhash = generateRandomNumber(6);
-                    $user->is_email_verified = 1;
-                    $user->email_verified_at = Carbon::now()->subMinute($expire);
-                }
-
-                $user->security_code_at = Carbon::now();
-                $user->setRememberToken(Str::random(60));
+                $user->available_at = Carbon::now();
+                $user->setRememberToken(\Str::random(60));
                 $user->save();
 
-                return $this->respondWithSuccess([
+                $password_reset = DB::table(config('auth.passwords.users.table'))
+                    ->where('email', $email)
+                    ->where('token', md5($code))
+                    ->delete();
+
+                return $this->respondSuccess("Successfully verified.", [
                     'email' => $user->email,
                     'token' => $user->getRememberToken(),
                 ]);
             }
         }
 
-        return $this->respondWithNotFound();
+        return $this->respondWentWrong();
     }
 
-    public function resetPassword(Request $request)
+    public function resetPasswordApi(Request $request)
     {
         $request->validate([
             'token' => 'required',
@@ -383,13 +384,11 @@ class UserController extends Controller
 
         $user = User::where('email', $email)
             ->where('remember_token', $token)
-            ->where('security_code_at', '>=', Carbon::now()->subMinute($expire))
             ->first();
 
         if ($user) {
-            $user->password = $password;
-            $user->security_code_at = Carbon::now()->subMinute($expire);
-            $user->setRememberToken(Str::random(60));
+            $user->password = Hash::make($password);
+            $user->setRememberToken(\Str::random(60));
             $user->save();
 
             // Delete password reset token form password_reset table
@@ -402,13 +401,13 @@ class UserController extends Controller
             try {
                 Mail::send(new InfoPasswordChangedMail($user));
             } catch (\Extension $ex) {
-                Log::channel('email')->error('Info Password Changed: ' . $ex->getMessage());
+                \Log::error('Info Password Changed: ' . $ex->getMessage());
             }
 
-            return $this->respondWithSuccess();
+            return $this->respondSuccess();
         }
 
-        return $this->respondWithNotFound();
+        return $this->respondWentWrong();
     }
 
     public function emailVerification(EmailVerificationRequest $request)
@@ -424,7 +423,7 @@ class UserController extends Controller
             ->first();
 
         if ($user) {
-            $new_code = generateRandomNumber(6);
+            $new_code = random_int(100000, 999999);
 
             $user->uhash = md5($new_code);
             $user->is_email_verified = 1;
@@ -435,16 +434,16 @@ class UserController extends Controller
             try {
                 Mail::send(new WelcomeMail($user->id));
             } catch (\Exception $ex) {
-                Log::channel('email')->error('Welcome Mail: ' . $ex->getMessage());
+                \Log::error('Welcome Mail: ' . $ex->getMessage());
             }
 
-            return $this->respondWithSuccess();
+            return $this->respondSuccess();
         }
 
-        return $this->respondWithNotFound([], "Confirmation code doesn't match.");
+        return $this->respondWentWrong();
     }
 
-    public function resendVerificationCode(ResedVerificationCodeRequest $request)
+    public function resendVerificationCode(Request $request)
     {
         $email = $request->get('email');
 
@@ -456,12 +455,12 @@ class UserController extends Controller
             try {
                 Mail::send(new EmailConformMail($user->id));
             } catch (\Exception $ex) {
-                Log::channel('email')->error('Conform Mail: ' . $ex->getMessage());
+                \Log::error('Conform Mail: ' . $ex->getMessage());
             }
 
-            return $this->respondWithSuccess();
+            return $this->respondSuccess();
         }
 
-        return $this->respondWithNotFound([], "Email doesn't match.");
+        return $this->respondWentWrong();
     }
 }

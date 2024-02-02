@@ -68,7 +68,7 @@ class Controller extends BaseController
      */
     public function respondSuccess($message = null, $additional_data = [])
     {
-        $message = is_null($message) ? __('lang_v.success') : $message;
+        $message = is_null($message) ? __('messages.success') : $message;
         $data = ['success' => true, 'msg' => $message];
 
         if (! empty($additional_data)) {
