@@ -26,6 +26,7 @@ return new class extends Migration
             $table->text('additional_notes')->nullable();
             $table->integer('created_by')->unsigned();
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
+            $table->softDeletes();
             $table->timestamps();
             
 

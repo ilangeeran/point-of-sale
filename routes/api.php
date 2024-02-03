@@ -1,8 +1,10 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EcommerceController;
+use App\Http\Controllers\OnlineOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,4 +37,7 @@ Route::group(["middleware" => 'auth:api'], function () {
 
     Route::get('wishlists', [EcommerceController::class, 'wishlists']);
     Route::post('wishlists', [EcommerceController::class, 'toggleWishlists']);
+    
+    Route::apiResource('orders', OnlineOrderController::class);
+
 });

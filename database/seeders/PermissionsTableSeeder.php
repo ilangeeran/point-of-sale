@@ -81,6 +81,18 @@ class PermissionsTableSeeder extends Seeder
 
             ['name' => 'access_all_locations'],
             ['name' => 'dashboard.data'],
+
+            ['name' => 'banner.view'],
+            ['name' => 'banner.create'],
+            ['name' => 'banner.update'],
+            ['name' => 'banner.delete'],
+
+            ['name' => 'so.view_own'],
+            ['name' => 'so.view_all'],
+            ['name' => 'so.view'],
+            ['name' => 'so.create'],
+            ['name' => 'so.update'],
+            ['name' => 'so.delete'],
         ];
 
         $insert_data = [];

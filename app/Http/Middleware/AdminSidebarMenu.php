@@ -252,6 +252,14 @@ class AdminSidebarMenu
                 $menu->dropdown(
                     __('sale.sale'),
                     function ($sub) use ($enabled_modules, $is_admin, $pos_settings) {
+                        // if (! ($is_admin || auth()->user()->hasAnyPermission(['online_order.view_own', 'online_order.view_all', 'online_order.create']))) {
+                            $sub->url(
+                                action([\App\Http\Controllers\OnlineOrderAdminController::class, 'index']),
+                                __('lang_v1.online_orders'),
+                                ['icon' => 'fa fas fa-plus-circle', 'active' => request()->segment(1) == 'online-order']
+                            );
+                        // }
+
                         if (! empty($pos_settings['enable_sales_order']) && ($is_admin || auth()->user()->hasAnyPermission(['so.view_own', 'so.view_all', 'so.create']))) {
                             $sub->url(
                                 action([\App\Http\Controllers\SalesOrderController::class, 'index']),

@@ -67,13 +67,21 @@ class EcommerceController extends Controller
         try {
             $limit = $request->limit ? $request->limit : 10;
 
-            $query = Product::query();
+            $query = Product::join('variations', 'products.id', '=', 'variations.product_id');
 
             if($request->q) {
-                $query->where('name', 'like', '%'.$request->q.'%');
+                $query->where(function($query) use($request) {                    
+                    $query->where('products.name', 'like', '%'.$request->q.'%');
+                    $query->orWhere('products.sku', 'like', '%'.$request->q.'%');
+                    $query->orWhere('variations.sub_sku', 'like', '%'.$request->q.'%');
+                });
             }
 
-            $products = $query->active()->productForSales()->paginate($limit);
+            $products = $query->active()
+                ->productForSales()
+                ->select('products.*')
+                ->with('variations')
+                ->paginate($limit);
 
         } catch (\Exception $e) {
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
