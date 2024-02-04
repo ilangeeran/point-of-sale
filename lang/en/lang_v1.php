@@ -1532,4 +1532,5 @@ return [
     'dropdown' => 'Dropdown',
     'enter_dropdown_values' => 'Enter dropdown options, one option per line',    
     'online_orders' => 'Online Orders',
+    'access_online_orders' => 'Access online orders',
 ];

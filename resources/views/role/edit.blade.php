@@ -653,6 +653,8 @@
                   </div>
             </div>
         </div>
+
+        {{-- Sell --}}
         <hr>
         <div class="row check_group">
         <div class="col-md-1">
@@ -830,9 +832,19 @@
               </label>
             </div>
           </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'access_online_orders', in_array('access_online_orders', $role_permissions), 
+                [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.access_online_orders' ) }}
+              </label>
+            </div>
+          </div>
           
         </div>
         </div>
+
+        {{-- Sales Order --}}
         <hr>
         @if(!empty($pos_settings['enable_sales_order']))
         <div class="row check_group">

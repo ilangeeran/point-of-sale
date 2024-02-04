@@ -18,6 +18,8 @@ class OnlineOrderAdminController extends Controller
 
     protected $commonUtil;
 
+    protected $sales_order_statuses;
+
     /**
      * Constructor
      *
@@ -52,7 +54,7 @@ class OnlineOrderAdminController extends Controller
      */
     public function index()
     {
-        if (! auth()->user()->can('so.view_own') && ! auth()->user()->can('so.view_all') && ! auth()->user()->can('so.create')) {
+        if (! auth()->user()->can('access_online_orders')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -68,7 +70,7 @@ class OnlineOrderAdminController extends Controller
             $sales_order_statuses[$key] = $value['label'];
         }
 
-        return view('sales_order.index')
+        return view('online_order.index')
             ->with(compact('business_locations', 'customers', 'shipping_statuses', 'sales_order_statuses'));
     }
 
