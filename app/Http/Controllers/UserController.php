@@ -13,6 +13,7 @@ use App\Mail\PasswordResetMail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\InfoPasswordChangedMail;
+use App\Utils\ContactUtil;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -33,15 +34,18 @@ class UserController extends Controller
      */
     protected $moduleUtil;
 
+    protected $contactUtil;
+
     /**
      * Constructor
      *
      * @param  ProductUtils  $product
      * @return void
      */
-    public function __construct(ModuleUtil $moduleUtil)
+    public function __construct(ModuleUtil $moduleUtil, ContactUtil $contactUtil)
     {
         $this->moduleUtil = $moduleUtil;
+        $this->contactUtil = $contactUtil;
     }
 
     /**
@@ -204,12 +208,27 @@ class UserController extends Controller
 
         $customer_details['language'] = empty($customer_details['language']) ? config('app.locale') : $customer_details['language'];
 
+        $customer_details['customer_contact_id'] = 
         $customer_details['user_type'] = 'customer';
         $customer_details['business_id'] = $business_id;
 
         $user = User::create_user($customer_details);
         // $user->assignRole('Rider');
         $token = $user->createToken('Token name');
+
+        // Create Contact
+        $costomer_input = [
+                'type' => 'customer',
+                'name' => $request->get('surname'),
+                'first_name' => $request->get('first_name'),
+                'last_name' => $request->get('last_name'),
+                'email' => $request->get('email'),
+                'assigned_to_users' => [$user->id],
+        ];
+        $contact_response = $this->contactUtil->createNewContact($costomer_input);
+
+        $user->customer_contact_id = $contact_response['data']->id;
+        $user->save();
 
         return response()->json([
             'accessToken' => $token->accessToken,

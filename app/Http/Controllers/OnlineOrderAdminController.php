@@ -112,7 +112,7 @@ class OnlineOrderAdminController extends Controller
             $status = $transaction->status;
             $statuses = $this->sales_order_statuses;
 
-            return view('sales_order.edit_status_modal')
+            return view('online_order.edit_status_modal')
                 ->with(compact('id', 'status', 'statuses'));
         }
     }

@@ -568,6 +568,14 @@ class SellController extends Controller
                         }
                     }
 
+                    if ($row->type == 'online_orders') {
+                        if ($is_admin && $row->status != 'completed') {
+                            $status = '<span class="edit-so-status label '.$sales_order_statuses[$row->status]['class'].'" data-href="'.action([\App\Http\Controllers\OnlineOrderAdminController::class, 'getEditSalesOrderStatus'], ['id' => $row->id]).'">'.$sales_order_statuses[$row->status]['label'].'</span>';
+                        } else {
+                            $status = '<span class="label '.$sales_order_statuses[$row->status]['class'].'" >'.$sales_order_statuses[$row->status]['label'].'</span>';
+                        }
+                    }
+
                     return $status;
                 })
                 ->editColumn('so_qty_remaining', '{{@format_quantity($so_qty_remaining)}}')
@@ -847,6 +855,12 @@ class SellController extends Controller
             $sales_order_statuses = Transaction::sales_order_statuses(true);
             $statuses = array_merge($statuses, $sales_order_statuses);
         }
+
+        if ($sell->type == 'online_orders') {
+            $sales_order_statuses = Transaction::sales_order_statuses(true);
+            $statuses = array_merge($statuses, $sales_order_statuses);
+        }
+
         $status_color_in_activity = Transaction::sales_order_statuses();
         $sales_orders = $sell->salesOrders();
 

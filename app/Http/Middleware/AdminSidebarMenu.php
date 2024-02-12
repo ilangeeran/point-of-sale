@@ -252,14 +252,6 @@ class AdminSidebarMenu
                 $menu->dropdown(
                     __('sale.sale'),
                     function ($sub) use ($enabled_modules, $is_admin, $pos_settings) {
-                        if (($is_admin || auth()->user()->hasAnyPermission(['access_online_orders']))) {
-                            $sub->url(
-                                action([\App\Http\Controllers\OnlineOrderAdminController::class, 'index']),
-                                __('lang_v1.online_orders'),
-                                ['icon' => 'fa fas fa-plus-circle', 'active' => request()->segment(1) == 'online-orders']
-                            );
-                        }
-
                         if (! empty($pos_settings['enable_sales_order']) && ($is_admin || auth()->user()->hasAnyPermission(['so.view_own', 'so.view_all', 'so.create']))) {
                             $sub->url(
                                 action([\App\Http\Controllers\SalesOrderController::class, 'index']),
@@ -778,6 +770,24 @@ class AdminSidebarMenu
                                 ['icon' => 'fa fas fa-user-circle', 'active' => request()->segment(1) == 'types-of-service']
                             );
                         }
+                    },
+                    ['icon' => 'fa fas fa-cog', 'id' => 'tour_step3']
+                )->order(85);
+            }
+
+            // Ecommerce 
+            if (auth()->user()->can('access_online_orders') ||
+                auth()->user()->can('banner.*')) {
+                $menu->dropdown(
+                    __('business.ecommerce'),
+                    function ($sub) use ($is_admin) {
+                        if (($is_admin || auth()->user()->hasAnyPermission(['access_online_orders']))) {
+                            $sub->url(
+                                action([\App\Http\Controllers\OnlineOrderAdminController::class, 'index']),
+                                __('lang_v1.online_orders'),
+                                ['icon' => 'fa fas fa-plus-circle', 'active' => request()->segment(1) == 'online-orders']
+                            );
+                        }
 
                         if (auth()->user()->can('banner.view') || auth()->user()->can('banner.create') || auth()->user()->can('banner.edit')) {
                             $sub->url(
@@ -787,7 +797,7 @@ class AdminSidebarMenu
                             );
                         }
                     },
-                    ['icon' => 'fa fas fa-cog', 'id' => 'tour_step3']
+                    ['icon' => 'fa fas fa-shopping-cart', 'id' => 'tour_step3']
                 )->order(85);
             }
         });

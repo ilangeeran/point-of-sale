@@ -69,4 +69,5 @@ return [
     'shipping' => 'Shipping',
     'shipping_details' => 'Shipping Details',
     'shipping_charges' => 'Shipping Charges',
+    'pending' => 'Pending',
 ];

@@ -81,6 +81,7 @@ class User extends Authenticatable
     {
         $user = User::create([
             'user_type' => isset($details['user_type']) && !empty($details['user_type']) ? $details['user_type'] : 'user',
+            'customer_contact_id' => isset($details['customer_contact_id']) && !empty($details['customer_contact_id']) ? $details['customer_contact_id'] : null,
             'surname' => $details['surname'],
             'first_name' => $details['first_name'],
             'last_name' => $details['last_name'],
@@ -304,7 +305,8 @@ class User extends Authenticatable
      */
     public function contact()
     {
-        return $this->belongsTo(\Modules\Crm\Entities\CrmContact::class, 'crm_contact_id');
+        // return $this->belongsTo(\Modules\Crm\Entities\CrmContact::class, 'crm_contact_id');
+        return $this->belongsTo(Contact::class, 'customer_contact_id');
     }
 
     /**

@@ -485,6 +485,8 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::get('user-location/{latlng}', [HomeController::class, 'getUserLocation']);
     
     Route::resource('online-orders', OnlineOrderAdminController::class)->only(['index']);
+    Route::get('edit-online-orders/{id}/status', [OnlineOrderAdminController::class, 'getEditSalesOrderStatus']);
+    Route::put('update-online-orders/{id}/status', [OnlineOrderAdminController::class, 'postEditSalesOrderStatus']);
 });
 
 // Route::middleware(['EcomApi'])->prefix('api/ecom')->group(function () {

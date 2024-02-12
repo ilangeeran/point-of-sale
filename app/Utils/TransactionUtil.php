@@ -2333,6 +2333,11 @@ class TransactionUtil extends Util
             $invoice_no = $this->generateReferenceNumber('sales_order', $ref_count, $business_id);
 
             return $invoice_no;
+        } elseif ($sale_type == 'online_orders') {
+            $ref_count = $this->setAndGetReferenceCount('online_orders', $business_id);
+            $invoice_no = $this->generateReferenceNumber('online_orders', $ref_count, $business_id);
+
+            return $invoice_no;
         } else {
             return Str::random(5);
         }
