@@ -1,14 +1,21 @@
 @extends('layouts.app')
 
 @php
-	$title = $transaction->type == 'sales_order' ? __('lang_v1.edit_sales_order') : __('sale.edit_sale');
+	$title = '';
+	if ($transaction->type == 'sales_order') {
+		$title = __('lang_v1.edit_sales_order');
+	}elseif ($transaction->type == 'online_orders') {
+		$title = __('lang_v1.edit_online_order');
+	}else {
+		$title = __('sale.edit_sale');
+	}
 @endphp
 @section('title', $title)
 
 @section('content')
 <!-- Content Header (Page header) -->
 <section class="content-header">
-    <h1>{{$title}} <small>(@if($transaction->type == 'sales_order') @lang('restaurant.order_no') @else @lang('sale.invoice_no') @endif: <span class="text-success">#{{$transaction->invoice_no}})</span></small></h1>
+    <h1>{{$title}} <small>(@if($transaction->type == 'sales_order' || $transaction->type == 'online_orders') @lang('restaurant.order_no') @else @lang('sale.invoice_no') @endif: <span class="text-success">#{{$transaction->invoice_no}})</span></small></h1>
 </section>
 <!-- Main content -->
 <section class="content">
@@ -29,7 +36,7 @@
 
 	{!! Form::hidden('location_id', $transaction->location_id, ['id' => 'location_id', 'data-receipt_printer_type' => !empty($location_printer_type) ? $location_printer_type : 'browser', 'data-default_payment_accounts' => $transaction->location->default_payment_accounts]); !!}
 
-	@if($transaction->type == 'sales_order')
+	@if($transaction->type == 'sales_order' || $transaction->type == 'online_orders')
 	 	<input type="hidden" id="sale_type" value="{{$transaction->type}}">
 	@endif
 	<div class="row">
@@ -176,7 +183,7 @@
 						$status = $transaction->status;
 					}
 				@endphp
-				@if($transaction->type == 'sales_order')
+				@if($transaction->type == 'sales_order' || $transaction->type == 'online_orders')
 					<input type="hidden" name="status" id="status" value="{{$transaction->status}}">
 				@else
 					<div class="@if(!empty($commission_agent)) col-sm-3 @else col-sm-4 @endif">
@@ -197,8 +204,8 @@
 				@can('edit_invoice_number')
 				<div class="col-sm-3">
 					<div class="form-group">
-						{!! Form::label('invoice_no', $transaction->type == 'sales_order' ? __('restaurant.order_no'): __('sale.invoice_no') . ':') !!}
-						{!! Form::text('invoice_no', $transaction->invoice_no, ['class' => 'form-control', 'placeholder' => $transaction->type == 'sales_order' ? __('restaurant.order_no'): __('sale.invoice_no')]); !!}
+						{!! Form::label('invoice_no', $transaction->type == 'sales_order' || $transaction->type == 'online_orders' ? __('restaurant.order_no'): __('sale.invoice_no') . ':') !!}
+						{!! Form::text('invoice_no', $transaction->invoice_no, ['class' => 'form-control', 'placeholder' => $transaction->type == 'sales_order' || $transaction->type == 'online_orders' ? __('restaurant.order_no'): __('sale.invoice_no')]); !!}
 					</div>
 				</div>
 				@endcan

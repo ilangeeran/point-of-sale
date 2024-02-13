@@ -348,6 +348,7 @@ class SellController extends Controller
                         if (auth()->user()->can('sell.view') || auth()->user()->can('direct_sell.view') || auth()->user()->can('view_own_sell_only')) {
                             $html .= '<li><a href="#" data-href="'.action([\App\Http\Controllers\SellController::class, 'show'], [$row->id]).'" class="btn-modal" data-container=".view_modal"><i class="fas fa-eye" aria-hidden="true"></i> '.__('messages.view').'</a></li>';
                         }
+
                         if (! $only_shipments) {
                             if ($row->is_direct_sale == 0) {
                                 if (auth()->user()->can('sell.update')) {
@@ -890,7 +891,7 @@ class SellController extends Controller
      */
     public function edit($id)
     {
-        if (! auth()->user()->can('direct_sell.update') && ! auth()->user()->can('so.update')) {
+        if (! auth()->user()->can('direct_sell.update') && ! auth()->user()->can('so.update') && ! auth()->user()->can('access_online_orders')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -915,10 +916,14 @@ class SellController extends Controller
 
         $transaction = Transaction::where('business_id', $business_id)
                             ->with(['price_group', 'types_of_service', 'media', 'media.uploaded_by_user'])
-                            ->whereIn('type', ['sell', 'sales_order'])
+                            ->whereIn('type', ['sell', 'sales_order', 'online_orders'])
                             ->findorfail($id);
 
         if ($transaction->type == 'sales_order' && ! auth()->user()->can('so.update')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($transaction->type == 'online_orders' && ! auth()->user()->can('access_online_orders')) {
             abort(403, 'Unauthorized action.');
         }
 

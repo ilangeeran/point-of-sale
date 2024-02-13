@@ -1357,7 +1357,7 @@ class SellPosController extends Controller
 
                 Media::uploadMedia($business_id, $transaction, $request, 'shipping_documents', false, 'shipping_document');
 
-                if ($transaction->type == 'sell') {
+                if ($transaction->type == 'sell' || $transaction->type == 'online_orders') {
 
                     //Update payment status
                     $payment_status = $this->transactionUtil->updatePaymentStatus($transaction->id, $transaction->final_total);
@@ -1472,6 +1472,12 @@ class SellPosController extends Controller
                 if ($transaction->type == 'sales_order') {
                     return redirect()
                     ->action([\App\Http\Controllers\SalesOrderController::class, 'index'])
+                    ->with('status', $output);
+                }
+
+                if ($transaction->type == 'online_orders') {
+                    return redirect()
+                    ->action([\App\Http\Controllers\OnlineOrderAdminController::class, 'index'])
                     ->with('status', $output);
                 }
 

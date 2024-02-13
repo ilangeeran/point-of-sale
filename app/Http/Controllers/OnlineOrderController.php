@@ -154,7 +154,8 @@ class OnlineOrderController extends Controller
                 'discount_type' => 'fixed',
                 'discount_amount' => 0,
                 'shipping_status' => 'ordered',
-                'shipping_charges' => $request->get('shipping_charges', 0)
+                'shipping_charges' => $request->get('shipping_charges', 0),
+                'is_direct_sale' => 1
             ];
 
             $invoice_total = [
